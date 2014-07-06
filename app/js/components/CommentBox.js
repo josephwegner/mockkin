@@ -1,0 +1,17 @@
+/**
+ * @jsx React.DOM
+**/
+
+var CommentBox = React.createClass({displayName: 'CommentBox',
+    render: function() {
+          return (
+                  React.DOM.div( {className:"commentBox2"}, 
+                    "Hello, world! I am a CommentBox."
+                  )
+          );
+    }
+});
+React.renderComponent(
+    CommentBox(null ),
+      document.getElementById('content')
+);
