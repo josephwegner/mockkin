@@ -1,4 +1,4 @@
-mockking
+mockkin
 ========
 
-Desktop API Mocking App
+Desktop API Mockin App
