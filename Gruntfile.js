@@ -13,7 +13,7 @@ module.exports = function(grunt) {
         // Task configuration.
         concat: {
             dist: {
-                src: ['app/js/vendor/**/*.js','app/js/components/**/*.js'],
+                src: ['app/js/client/vendor/**/*.js','app/js/client/build/**/*.js', 'app/js/client/kickoff.js'],
                 dest: 'app/js/main-min.js',
             }
         },
@@ -23,13 +23,14 @@ module.exports = function(grunt) {
                     livereload: true
                 },
                 files: [
-                    'app/js/*/**/*.js'
+                    'app/js/client/*.js',
+                    'app/js/client/**/*.js'
                 ],
                 tasks: ['concat'],
             },
             compileJSX: {
               files: [
-                'app/jsx/**/*.jsx'
+                'app/js/client/jsx/**/*.jsx'
               ],
               tasks: ['react', 'concat']
             }
@@ -37,9 +38,9 @@ module.exports = function(grunt) {
         react: {
          files: {
             expand: true,
-            cwd: 'app/jsx/',
+            cwd: 'app/js/client/jsx/',
             src: '**/*.jsx',
-            dest: 'app/js',
+            dest: 'app/js/client/build',
             ext: '.js'
          } 
         }

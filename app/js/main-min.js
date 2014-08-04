@@ -17230,16 +17230,70 @@ module.exports = warning;
  * @jsx React.DOM
 **/
 
-var CommentBox = React.createClass({displayName: 'CommentBox',
+var EndpointInput = React.createClass({displayName: 'EndpointInput',
+  render: function() {
+    return (
+      React.DOM.input( {type:"text", name:"endpoint", className:"endpoint-input"} )
+    );
+  }
+});
+
+/**
+ * @jsx React.DOM
+**/
+
+var ProcessToggler = React.createClass({displayName: 'ProcessToggler',
+  render: function() {
+    return (
+      React.DOM.button( {onClick:this.handleClick, className:"process-toggler"}, "Start Server")  
+    );
+  },
+  handleClick: function(e) {
+    if(typeof(this.props.onClick) === "function") {
+      this.props.onClick(e);
+    }
+  }
+});
+
+/**
+ * @jsx React.DOM
+**/
+
+var ServerManager = React.createClass({displayName: 'ServerManager',
     render: function() {
           return (
-                  React.DOM.div( {className:"commentBox2"}, 
-                    "Hello, world! I am a CommentBox."
-                  )
+            React.DOM.div( {className:"server-manager"}, 
+              EndpointInput(null ),
+              ProcessToggler( {onClick:this.toggleServer} )
+            )            
           );
+    },
+    processRunning: false,
+    toggleServer: function(e) {
+      if(this.processRunning) {
+        this.stopServer();
+      } else {
+        this.startServer();
+      }
+    },
+    stopServer: function() {
+      window.listener.stopPort(this.props.port);
+      this.processRunning = false;
+    },
+    startServer: function() {
+      window.listener.addProcess(this.props.process, this.props.port);
+      this.processRunning = true;
     }
 });
+
+
+window.listener = require('../js/backend/Listener.js');
+var Process = require('../js/backend/Process.js');
+
+var mainProcess = new Process();
+
 React.renderComponent(
-    CommentBox(null ),
+    ServerManager({port: 8080, process: mainProcess }),
       document.getElementById('content')
 );
+
