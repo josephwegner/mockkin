@@ -2,7 +2,7 @@
  * @jsx React.DOM
 **/
 
-var ProcessManager = React.createClass({
+var ProcessManager = React.createClass({displayName: 'ProcessManager',
     getInitialState: function() {
       return {
         path: "",
@@ -13,12 +13,12 @@ var ProcessManager = React.createClass({
     },
     render: function() {
       return (
-        <div className="server-manager">
-          <EndpointInput onChange={this.changeEndpoint} />
-          <ProcessToggler onClick={this.toggleProcess} running={this.state.running} />
-          <br />
-          <ResponseInput onChange={this.changeResponse} />
-        </div>            
+        React.DOM.div( {className:"server-manager"}, 
+          EndpointInput( {onChange:this.changeEndpoint} ),
+          ProcessToggler( {onClick:this.toggleProcess, running:this.state.running} ),
+          React.DOM.br(null ),
+          ResponseInput( {onChange:this.changeResponse} )
+        )            
       );
     },
     changeResponse: function(response) {

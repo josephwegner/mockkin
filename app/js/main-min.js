@@ -17270,28 +17270,34 @@ var ProcessManager = React.createClass({displayName: 'ProcessManager',
       };
     },
     render: function() {
-          return (
-            React.DOM.div( {className:"server-manager"}, 
-              EndpointInput( {onChange:this.changeEndpoint, running:this.state.running} ),
-              ProcessToggler( {onClick:this.toggleProcess} ),
-              React.DOM.br(null ),
-              ResponseInput( {onChange:this.changeResponse} )
-            )            
-          );
+      return (
+        React.DOM.div( {className:"server-manager"}, 
+          EndpointInput( {onChange:this.changeEndpoint} ),
+          ProcessToggler( {onClick:this.toggleProcess, running:this.state.running} ),
+          React.DOM.br(null ),
+          ResponseInput( {onChange:this.changeResponse} )
+        )            
+      );
     },
     changeResponse: function(response) {
-      this.setState({response: response});
-
-      if(this.isProcessRunning()) {
-        this.process.setResponse(response);
-      }
+      this.setState({response: response}, this.updateProcessEndpoints);
     }, 
     changeEndpoint: function(path) {
-     this.setState({path: path});
-
-     if(this.isProcessRunning()) {
-        this.process.setResponsePath(path);
-     }
+     this.setState({path: path}, this.updateProcessEndpoints);
+    },
+    updateProcessEndpoints: function() {
+      if(this.isProcessRunning()) {
+        this.process.updateEndpoints(this.buildProcessOptions().endpoints); 
+      }
+    },
+    buildProcessOptions: function() {
+      return {
+        port: this.state.port,
+        endpoints: [{
+          path: this.state.path,
+          response: this.state.response
+        }]
+      }
     },
     toggleProcess: function(e) {
       if(this.isProcessRunning()) {
@@ -17306,7 +17312,7 @@ var ProcessManager = React.createClass({displayName: 'ProcessManager',
     isProcessRunning: function() {
       return typeof(this.process) !== "undefined" && this.process.running()
     },
-    processClosed: function() {
+    processStopped: function() {
       console.log("Process closed (expected)");
       delete this.process;
       this.setState({running: false});
@@ -17317,7 +17323,11 @@ var ProcessManager = React.createClass({displayName: 'ProcessManager',
       this.setState({running: false});
     },
     startProcess: function() {
-      this.process = window.listener.addProcess(this.state.port, this.state.path, this.state.response);
+      this.process = window.listener.addProcess(this.buildProcessOptions());
+  
+      this.process.on('stop', this.processStopped);
+      this.process.on('crash', this.processCrashed);
+
       this.setState({running: true});
     }
 });

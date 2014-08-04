@@ -1,33 +1,41 @@
 // Requires
 var http = require('http');
 var events = require('events');
+var extend = require('extend');
+
+// Defaults
+var defaultProcess = {
+  port: 8080,
+  endpoints: [
+    {
+      path: "",
+      response: "Default Response"
+    }
+  ]
+}
 
 //Object
 
-var Process = function() {
+var Process = function(options) {
   this.serverActive = false;
   this.server = http.createServer(this.handleRequest.bind(this));
-  this.path = "";
-  this.response = "";
   this.expectedClose = false;
+
+  this.options = extend(defaultProcess, options);
 
   events.EventEmitter.call(this);
 };
 
 Process.prototype.__proto__ = events.EventEmitter.prototype;
 
-Process.prototype.start = function(port) {
-  if(typeof(port) === "undefined") {
-    throw Error("Port must be defined");
-  }
-
+Process.prototype.start = function() {
   if(this.serverActive) {
     throw Error("Process is already started");
   }
   
-  console.log("starting process on port " + port);
+  console.log("starting process on port " + this.options.port);
 
-  this.server.listen(port);
+  this.server.listen(this.options.port);
   this.server.on('close', this.handleClose.bind(this));
   this.serverActive = true; 
 }
@@ -37,6 +45,8 @@ Process.prototype.stop = function() {
     throw Error("Process is not started");
   }
 
+  this.expectedClose = true;
+
   this.server.close()
 
   this.serverActive = false;
@@ -44,7 +54,7 @@ Process.prototype.stop = function() {
 
 Process.prototype.handleClose = function() {
   if(this.expectedClose) {
-    this.emit("close");
+    this.emit("stop");
   } else {
     this.emit("crash");
   }
@@ -55,28 +65,33 @@ Process.prototype.handleRequest = function(req, res) {
 
   var path = req.url.replace("/", "");
 
-  if(path === this.path) {
-    res.end(this.response);
-  } else {
-    res.statusCode = 404;
-    res.end();
+  for(var i=0,max=this.options.endpoints.length; i<max; i++) {
+    var endpoint = this.options.endpoints[i];
+
+    console.log(path, endpoint.path);
+
+    if(path === endpoint.path) {
+      res.end(endpoint.response);
+      return true;
+    }
   }
+
+  res.statusCode = 404;
+  res.end();
+
+  return false;
 }
 
 Process.prototype.running = function() {
   return this.serverActive;
 };
 
-Process.prototype.setResponsePath = function(path) {
-  this.path = path;
+Process.prototype.updateEndpoints = function(endpoints) {
+  if(typeof(this.options.endpoints.length) === "undefined") {
+    throw Error("Endpoints must be an array");
+  }
 
-  console.log("Path updated to " + path);
-}
-
-Process.prototype.setResponse = function(response) {
-  this.response = response;
-
-  console.log("response updated");
+  this.options.endpoints = endpoints;
 }
 
 module.exports = exports = Process

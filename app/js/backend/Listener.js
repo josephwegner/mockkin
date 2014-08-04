@@ -4,18 +4,20 @@ var Listener = function() {
   this.portProcesses = {}
 };
 
-Listener.prototype.addProcess = function(port, path, response) {
-  if(typeof(this.portProcesses[port]) !== "undefined") {
-    throw Error("Port "+port+" is already in use!");
+Listener.prototype.addProcess = function(options) {
+  if(typeof(options) !== "object") {
+    options = {}
   }
 
-  var process = new Process();
-  this.portProcesses[port] = process;
+  var process = new Process(options);
 
-  process.setResponsePath(path);
-  process.setResponse(response);
+  if(typeof(this.portProcesses[process.options.port]) !== "undefined") {
+    throw Error("Port "+process.options.port+" is already in use!");
+  }
 
-  process.start(port);
+  this.portProcesses[process.options.port] = process;
+
+  process.start();
 
   return process;
 };
