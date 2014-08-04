@@ -2,12 +2,15 @@ var Listener = function() {
   this.portProcesses = {}
 };
 
-Listener.prototype.addProcess = function(process, port) {
+Listener.prototype.addProcess = function(process, port, path, response) {
   if(typeof(this.portProcesses[port]) !== "undefined") {
     throw Error("Port "+port+" is already in use!");
   }
 
   this.portProcesses[port] = process;
+
+  process.setResponsePath(path);
+  process.setResponse(response);
 
   process.start(port);
 };

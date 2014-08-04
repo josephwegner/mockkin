@@ -17231,10 +17231,28 @@ module.exports = warning;
 **/
 
 var EndpointInput = React.createClass({displayName: 'EndpointInput',
+  getInitialState: function() {
+    return {
+      url: ""
+    }
+  },
   render: function() {
     return (
-      React.DOM.input( {type:"text", name:"endpoint", className:"endpoint-input"} )
+      React.DOM.input( 
+        {ref:"url",
+        type:"text", 
+        name:"endpoint", 
+        className:"endpoint-input", 
+        onChange:this.handleChange} )
     );
+  },
+  handleChange: function(e) {
+    var newValue = this.refs.url.getDOMNode().value.trim()
+
+    if(newValue !== this.state.url) {
+      this.state.url = newValue;
+      this.props.onChange(this.state.url);
+    }
   }
 });
 
@@ -17259,16 +17277,66 @@ var ProcessToggler = React.createClass({displayName: 'ProcessToggler',
  * @jsx React.DOM
 **/
 
+var ResponseInput = React.createClass({displayName: 'ResponseInput',
+  getInitialState: function() {
+    return {
+      response: ""
+    }
+  },
+  render: function() {
+    return (
+      React.DOM.textarea( 
+        {ref:"response",
+        className:"response-input", 
+        onChange:this.handleChange})
+    );
+  },
+  handleChange: function(e) {
+    var newValue = this.refs.response.getDOMNode().value.trim()
+
+    if(newValue !== this.state.response) {
+      this.state.response = newValue;
+      this.props.onChange(this.state.response);
+    }
+  }
+});
+
+/**
+ * @jsx React.DOM
+**/
+
 var ServerManager = React.createClass({displayName: 'ServerManager',
+    getInitialState: function() {
+      return {
+        path: "",
+        response: ""
+      };
+    },
     render: function() {
           return (
             React.DOM.div( {className:"server-manager"}, 
-              EndpointInput(null ),
-              ProcessToggler( {onClick:this.toggleServer} )
+              EndpointInput( {onChange:this.changeEndpoint} ),
+              ProcessToggler( {onClick:this.toggleServer} ),
+              React.DOM.br(null ),
+              ResponseInput( {onChange:this.changeResponse} )
             )            
           );
     },
     processRunning: false,
+    changeResponse: function(response) {
+      this.state.response = response;
+
+      if(this.processRunning) {
+        this.props.process.setResponse(response);
+      }
+    }, 
+    changeEndpoint: function(path) {
+     this.state.path = path; 
+
+     if(this.processRunning) {
+        this.props.process.setResponsePath(path);
+     }
+    },
     toggleServer: function(e) {
       if(this.processRunning) {
         this.stopServer();
@@ -17281,7 +17349,7 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
       this.processRunning = false;
     },
     startServer: function() {
-      window.listener.addProcess(this.props.process, this.props.port);
+      window.listener.addProcess(this.props.process, this.props.port, this.state.path, this.state.response);
       this.processRunning = true;
     }
 });
