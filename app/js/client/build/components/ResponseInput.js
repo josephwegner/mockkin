@@ -20,8 +20,8 @@ var ResponseInput = React.createClass({displayName: 'ResponseInput',
     var newValue = this.refs.response.getDOMNode().value.trim()
 
     if(newValue !== this.state.response) {
-      this.state.response = newValue;
-      this.props.onChange(this.state.response);
+      this.setState({response: newValue});
+      this.props.onChange(newValue);
     }
   }
 });

@@ -4,8 +4,10 @@
 
 var ProcessToggler = React.createClass({displayName: 'ProcessToggler',
   render: function() {
+    var buttonState = this.props.running ? "Stop" : "Start";
+
     return (
-      React.DOM.button( {onClick:this.handleClick, className:"process-toggler"}, "Start Server")  
+      React.DOM.button( {onClick:this.handleClick, className:"process-toggler"}, buttonState, " Server")  
     );
   },
   handleClick: function(e) {

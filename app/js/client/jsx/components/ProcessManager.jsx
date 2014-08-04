@@ -2,7 +2,7 @@
  * @jsx React.DOM
 **/
 
-var ServerManager = React.createClass({displayName: 'ServerManager',
+var ProcessManager = React.createClass({
     getInitialState: function() {
       return {
         path: "",
@@ -13,12 +13,12 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
     },
     render: function() {
           return (
-            React.DOM.div( {className:"server-manager"}, 
-              EndpointInput( {onChange:this.changeEndpoint, running:this.state.running} ),
-              ProcessToggler( {onClick:this.toggleServer} ),
-              React.DOM.br(null ),
-              ResponseInput( {onChange:this.changeResponse} )
-            )            
+            <div className="server-manager">
+              <EndpointInput onChange={this.changeEndpoint} running={this.state.running} />
+              <ProcessToggler onClick={this.toggleProcess} />
+              <br />
+              <ResponseInput onChange={this.changeResponse} />
+            </div>            
           );
     },
     changeResponse: function(response) {
@@ -35,14 +35,14 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
         this.process.setResponsePath(path);
      }
     },
-    toggleServer: function(e) {
+    toggleProcess: function(e) {
       if(this.isProcessRunning()) {
-        this.stopServer();
+        this.stopProcess();
       } else {
-        this.startServer();
+        this.startProcess();
       }
     },
-    stopServer: function() {
+    stopProcess: function() {
       window.listener.stopPort(this.state.port);
     },
     isProcessRunning: function() {
@@ -58,7 +58,7 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
       delete this.process;
       this.setState({running: false});
     },
-    startServer: function() {
+    startProcess: function() {
       this.process = window.listener.addProcess(this.state.port, this.state.path, this.state.response);
       this.setState({running: true});
     }

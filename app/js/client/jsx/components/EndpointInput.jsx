@@ -22,8 +22,8 @@ var EndpointInput = React.createClass({
     var newValue = this.refs.url.getDOMNode().value.trim()
 
     if(newValue !== this.state.url) {
-      this.state.url = newValue;
-      this.props.onChange(this.state.url);
+      this.setState({url: newValue});
+      this.props.onChange(newValue);
     }
   }
 });

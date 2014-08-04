@@ -17250,8 +17250,8 @@ var EndpointInput = React.createClass({displayName: 'EndpointInput',
     var newValue = this.refs.url.getDOMNode().value.trim()
 
     if(newValue !== this.state.url) {
-      this.state.url = newValue;
-      this.props.onChange(this.state.url);
+      this.setState({url: newValue});
+      this.props.onChange(newValue);
     }
   }
 });
@@ -17260,10 +17260,79 @@ var EndpointInput = React.createClass({displayName: 'EndpointInput',
  * @jsx React.DOM
 **/
 
+var ProcessManager = React.createClass({displayName: 'ProcessManager',
+    getInitialState: function() {
+      return {
+        path: "",
+        response: "",
+        port: 8080,
+        running: false
+      };
+    },
+    render: function() {
+          return (
+            React.DOM.div( {className:"server-manager"}, 
+              EndpointInput( {onChange:this.changeEndpoint, running:this.state.running} ),
+              ProcessToggler( {onClick:this.toggleProcess} ),
+              React.DOM.br(null ),
+              ResponseInput( {onChange:this.changeResponse} )
+            )            
+          );
+    },
+    changeResponse: function(response) {
+      this.setState({response: response});
+
+      if(this.isProcessRunning()) {
+        this.process.setResponse(response);
+      }
+    }, 
+    changeEndpoint: function(path) {
+     this.setState({path: path});
+
+     if(this.isProcessRunning()) {
+        this.process.setResponsePath(path);
+     }
+    },
+    toggleProcess: function(e) {
+      if(this.isProcessRunning()) {
+        this.stopProcess();
+      } else {
+        this.startProcess();
+      }
+    },
+    stopProcess: function() {
+      window.listener.stopPort(this.state.port);
+    },
+    isProcessRunning: function() {
+      return typeof(this.process) !== "undefined" && this.process.running()
+    },
+    processClosed: function() {
+      console.log("Process closed (expected)");
+      delete this.process;
+      this.setState({running: false});
+    },
+    processCrashed: function() {
+      console.log("Process closed (unexpected)");
+      delete this.process;
+      this.setState({running: false});
+    },
+    startProcess: function() {
+      this.process = window.listener.addProcess(this.state.port, this.state.path, this.state.response);
+      this.setState({running: true});
+    }
+});
+
+
+/**
+ * @jsx React.DOM
+**/
+
 var ProcessToggler = React.createClass({displayName: 'ProcessToggler',
   render: function() {
+    var buttonState = this.props.running ? "Stop" : "Start";
+
     return (
-      React.DOM.button( {onClick:this.handleClick, className:"process-toggler"}, "Start Server")  
+      React.DOM.button( {onClick:this.handleClick, className:"process-toggler"}, buttonState, " Server")  
     );
   },
   handleClick: function(e) {
@@ -17295,8 +17364,8 @@ var ResponseInput = React.createClass({displayName: 'ResponseInput',
     var newValue = this.refs.response.getDOMNode().value.trim()
 
     if(newValue !== this.state.response) {
-      this.state.response = newValue;
-      this.props.onChange(this.state.response);
+      this.setState({response: newValue});
+      this.props.onChange(newValue);
     }
   }
 });
@@ -17309,59 +17378,69 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
     getInitialState: function() {
       return {
         path: "",
-        response: ""
+        response: "",
+        port: 8080,
+        running: false
       };
     },
     render: function() {
           return (
             React.DOM.div( {className:"server-manager"}, 
-              EndpointInput( {onChange:this.changeEndpoint} ),
+              EndpointInput( {onChange:this.changeEndpoint, running:this.state.running} ),
               ProcessToggler( {onClick:this.toggleServer} ),
               React.DOM.br(null ),
               ResponseInput( {onChange:this.changeResponse} )
             )            
           );
     },
-    processRunning: false,
     changeResponse: function(response) {
-      this.state.response = response;
+      this.setState({response: response});
 
-      if(this.processRunning) {
-        this.props.process.setResponse(response);
+      if(this.isProcessRunning()) {
+        this.process.setResponse(response);
       }
     }, 
     changeEndpoint: function(path) {
-     this.state.path = path; 
+     this.setState({path: path});
 
-     if(this.processRunning) {
-        this.props.process.setResponsePath(path);
+     if(this.isProcessRunning()) {
+        this.process.setResponsePath(path);
      }
     },
     toggleServer: function(e) {
-      if(this.processRunning) {
+      if(this.isProcessRunning()) {
         this.stopServer();
       } else {
         this.startServer();
       }
     },
     stopServer: function() {
-      window.listener.stopPort(this.props.port);
-      this.processRunning = false;
+      window.listener.stopPort(this.state.port);
+    },
+    isProcessRunning: function() {
+      return typeof(this.process) !== "undefined" && this.process.running()
+    },
+    processClosed: function() {
+      console.log("Process closed (expected)");
+      delete this.process;
+      this.setState({running: false});
+    },
+    processCrashed: function() {
+      console.log("Process closed (unexpected)");
+      delete this.process;
+      this.setState({running: false});
     },
     startServer: function() {
-      window.listener.addProcess(this.props.process, this.props.port, this.state.path, this.state.response);
-      this.processRunning = true;
+      this.process = window.listener.addProcess(this.state.port, this.state.path, this.state.response);
+      this.setState({running: true});
     }
 });
 
 
 window.listener = require('../js/backend/Listener.js');
-var Process = require('../js/backend/Process.js');
-
-var mainProcess = new Process();
 
 React.renderComponent(
-    ServerManager({port: 8080, process: mainProcess }),
+    ProcessManager(),
       document.getElementById('content')
 );
 
