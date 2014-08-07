@@ -17230,6 +17230,61 @@ module.exports = warning;
  * @jsx React.DOM
 **/
 
+var EndpointConfig = React.createClass({displayName: 'EndpointConfig',
+  getInitialState: function() {
+    return {
+      path: "",
+      response: ""
+    }
+  },
+  render: function() {
+    return (
+      React.DOM.div(null, 
+        React.DOM.input( 
+          {ref:"path",
+          type:"text", 
+          name:"path", 
+          className:"path-input", 
+          onChange:this.handleChangePath} ),
+        React.DOM.textarea(
+          {ref:"response",
+          name:"response",
+          className:"response-input",
+          onChange:this.handleChangeResponse} 
+        ),
+        React.DOM.button( {onClick:this.remove}, "Remove Endpoint")
+      )
+    );
+  },
+  remove: function() {
+    this.props.onRemove(this.props.key);
+  },
+  handleChangePath: function(e) {
+    var newValue = this.refs.path.getDOMNode().value.trim()
+
+    if(newValue !== this.state.path) {
+      this.setState({path: newValue}, this.updateParent);
+    }
+  },
+  handleChangeResponse: function(e) {
+    var newValue = this.refs.response.getDOMNode().value.trim()
+
+    if(newValue !== this.state.response) {
+      this.setState({response: newValue}, this.updateParent);
+    }
+  },
+  updateParent: function() {
+    this.props.onChange({
+      path: this.state.path,
+      response: this.state.response
+    }, this.props.key);
+  }
+});
+
+/**
+ * @jsx React.DOM
+**/
+
 var EndpointInput = React.createClass({displayName: 'EndpointInput',
   getInitialState: function() {
     return {
@@ -17263,27 +17318,76 @@ var EndpointInput = React.createClass({displayName: 'EndpointInput',
 var ProcessManager = React.createClass({displayName: 'ProcessManager',
     getInitialState: function() {
       return {
-        path: "",
-        response: "",
         port: 8080,
-        running: false
+        running: false,
+        endpoints: [
+          {
+            path: "",
+            response: "",
+            key: "endpoint-"+ Math.floor(Math.random() * 1000000)
+          }
+        ]
       };
     },
     render: function() {
+      var self = this;
+    
+      var endpointNodes = this.state.endpoints.map(function(endpoint) {
+        return (
+          EndpointConfig( 
+            {onChange:self.changeEndpoint, 
+            onRemove:self.removeEndpoint,
+            key:endpoint.key} )
+        );
+      });
+
       return (
         React.DOM.div( {className:"server-manager"}, 
-          EndpointInput( {onChange:this.changeEndpoint} ),
           ProcessToggler( {onClick:this.toggleProcess, running:this.state.running} ),
           React.DOM.br(null ),
-          ResponseInput( {onChange:this.changeResponse} )
+          endpointNodes,
+          React.DOM.br(null ),
+          React.DOM.button( {onClick:this.addEndpoint}, "Add Endpoint")
         )            
       );
     },
-    changeResponse: function(response) {
-      this.setState({response: response}, this.updateProcessEndpoints);
-    }, 
-    changeEndpoint: function(path) {
-     this.setState({path: path}, this.updateProcessEndpoints);
+    addEndpoint: function() {
+      var endpoints = this.state.endpoints;
+      endpoints.push({
+        path: "",
+        response: "",
+        key: "endpoint-" + Math.floor(Math.random() * 1000000)
+      });
+      this.setState({endpoints: endpoints});
+    },
+    removeEndpoint: function(key) {
+      var endpoints = this.state.endpoints;
+      var index = false;
+        
+      for(var i=0,max=endpoints.length; i<max; i++) {
+        if(endpoints[i].key === key) {
+          index = i;
+          break;
+        }
+      }
+
+      if(index !== false) {
+        endpoints.splice(index, 1);
+        this.setState({endpoints: endpoints}, this.updateProcessEndpoints);
+      }
+    },
+    changeEndpoint: function(endpoint, key) {
+     var endpoints = this.state.endpoints;
+     endpoint.key = key;
+
+     for(var i=0,max=endpoints.length; i<max; i++) {
+      if(endpoints[i].key === key) {
+        endpoints[i] = endpoint;
+        break;
+      }
+     }
+
+     this.setState({endpoints: endpoints}, this.updateProcessEndpoints);
     },
     updateProcessEndpoints: function() {
       if(this.isProcessRunning()) {
@@ -17293,10 +17397,7 @@ var ProcessManager = React.createClass({displayName: 'ProcessManager',
     buildProcessOptions: function() {
       return {
         port: this.state.port,
-        endpoints: [{
-          path: this.state.path,
-          response: this.state.response
-        }]
+        endpoints: this.state.endpoints
       }
     },
     toggleProcess: function(e) {
@@ -17446,8 +17547,6 @@ var ServerManager = React.createClass({displayName: 'ServerManager',
     }
 });
 
-
-window.listener = require('../js/backend/Listener.js');
 
 React.renderComponent(
     ProcessManager(),

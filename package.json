@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "description": "Desktop API Mocking App",
   "main": "app/html/index.html",
+  "node-main": "app/js/backend/main.js",
   "window": {
-    "toolbar": true,
-    "width": 800,
-    "height": 600
+    "toolbar": false,
+    "width": 1000,
+    "height": 700
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
